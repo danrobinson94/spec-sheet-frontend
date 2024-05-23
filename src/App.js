@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, message, Layout } from 'antd';
+import { Upload, message, Layout, Modal, Input, Card, List } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import './App.css';
@@ -9,6 +9,38 @@ const { Dragger } = Upload;
 
 function App() {
 	const [file, setFile] = useState(null);
+	const [searchTerms, setSearchTerms] = useState([]);
+	const [visible, setVisible] = useState(false);
+	const [inputValue, setInputValue] = useState('');
+	const [results, setResults] = useState([]);
+
+	const showModal = () => {
+		setVisible(true);
+	};
+
+	const handleOk = () => {
+		setVisible(false);
+	};
+
+	const handleCancel = () => {
+		setVisible(false);
+	};
+
+	const handleInput = (e) => {
+		setInputValue(e.target.value);
+	};
+
+	const handleAddTerm = () => {
+		// Split inputValue string into separate terms based on comma delimiter
+		const newTerms = inputValue.split(',').map((term) => term.trim());
+
+		// Filter out any empty terms
+		const validNewTerms = newTerms.filter((term) => term !== '');
+
+		// Add the new terms to the searchTerms array
+		setSearchTerms([...searchTerms, ...validNewTerms]);
+		setInputValue('');
+	};
 
 	const props = {
 		name: 'file',
@@ -38,9 +70,10 @@ function App() {
 
 		const formData = new FormData();
 		formData.append('pdf_file', file); // Ensure the key matches the FastAPI endpoint parameter
+		formData.append('search_terms', searchTerms);
+		console.log('SEARCH', searchTerms);
 
 		try {
-			console.log('ATTEMPT', file);
 			const response = await axios.post(
 				process.env.REACT_APP_BACKEND_PATH + '/process',
 				formData,
@@ -51,11 +84,39 @@ function App() {
 				},
 			);
 			message.success('File uploaded successfully');
-			console.log(response.data);
+			setResults(response.data.result);
 		} catch (error) {
 			message.error('File upload failed');
 			console.error(error);
 		}
+	};
+	console.log('RESULTS', results);
+	const ResultsDisplay = ({ results }) => {
+		if (!Array.isArray(results)) {
+			return null; // or handle the error accordingly
+		}
+
+		return (
+			<div>
+				{results.map((result, index) => {
+					const key = Object.keys(result)[0];
+					return (
+						<Card
+							key={index}
+							title={`Search Term: ${key}`}
+							style={{ marginBottom: '20px', textAlign: 'left' }}
+						>
+							<List
+								dataSource={result[key]}
+								renderItem={(item, itemIndex) => (
+									<List.Item key={itemIndex}>{item}</List.Item>
+								)}
+							/>
+						</Card>
+					);
+				})}
+			</div>
+		);
 	};
 
 	return (
@@ -77,7 +138,29 @@ function App() {
 				<button onClick={handleUpload} style={{ marginTop: '20px' }}>
 					Upload File
 				</button>
+				<button onClick={showModal} style={{ marginLeft: '20px' }}>
+					Update Search Terms
+				</button>
+				<Modal
+					title='Update Search Terms'
+					onOk={handleOk}
+					open={visible}
+					onCancel={handleCancel}
+				>
+					<Input
+						placeholder='Enter search term'
+						value={inputValue}
+						onChange={handleInput}
+					/>
+					<button onClick={handleAddTerm}>Add</button>
+					<ul>
+						{searchTerms.map((term, index) => (
+							<li key={index}>{term}</li>
+						))}
+					</ul>
+				</Modal>
 			</Content>
+			<ResultsDisplay results={results} />
 		</Layout>
 	);
 }
