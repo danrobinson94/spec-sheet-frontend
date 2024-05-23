@@ -37,11 +37,12 @@ function App() {
 		}
 
 		const formData = new FormData();
-		formData.append('file', file);
+		formData.append('pdf_file', file); // Ensure the key matches the FastAPI endpoint parameter
 
 		try {
+			console.log('ATTEMPT', file);
 			const response = await axios.post(
-				'http://localhost:5000/process',
+				'https://spec-sheets.vercel.app/process',
 				formData,
 				{
 					headers: {
