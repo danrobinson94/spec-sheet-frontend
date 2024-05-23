@@ -93,7 +93,7 @@ function App() {
 	console.log('RESULTS', results);
 	const ResultsDisplay = ({ results }) => {
 		if (!Array.isArray(results)) {
-			return null; // or handle the error accordingly
+			return null;
 		}
 
 		return (
