@@ -42,7 +42,7 @@ function App() {
 		try {
 			console.log('ATTEMPT', file);
 			const response = await axios.post(
-				'https://spec-sheets.vercel.app/process',
+				process.env.REACT_APP_BACKEND_PATH + '/process',
 				formData,
 				{
 					headers: {
