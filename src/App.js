@@ -90,7 +90,6 @@ function App() {
 			console.error(error);
 		}
 	};
-	console.log('RESULTS', results);
 	const ResultsDisplay = ({ results }) => {
 		if (!Array.isArray(results)) {
 			return null;
