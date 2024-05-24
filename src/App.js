@@ -71,7 +71,6 @@ function App() {
 		const formData = new FormData();
 		formData.append('pdf_file', file); // Ensure the key matches the FastAPI endpoint parameter
 		formData.append('search_terms', searchTerms);
-		console.log('SEARCH', searchTerms);
 
 		try {
 			const response = await axios.post(
