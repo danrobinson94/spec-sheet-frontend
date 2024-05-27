@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { Upload, message, Layout, Modal, Input, Card, List } from 'antd';
+import React, { useState, useEffect } from 'react';
+import {
+	Upload,
+	message,
+	Layout,
+	Modal,
+	Input,
+	Card,
+	List,
+	Row,
+	Col,
+} from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import './App.css';
@@ -13,6 +23,22 @@ function App() {
 	const [visible, setVisible] = useState(false);
 	const [inputValue, setInputValue] = useState('');
 	const [results, setResults] = useState([]);
+	useEffect(() => {
+		setResults([
+			{
+				warranty: [
+					{ Section: 'Section1', Value: 'Value1', image: 'imageURL1' },
+					{ Section: 'Section2', Value: 'Value2', image: 'imageURL2' },
+				],
+			},
+			{
+				cummins: [
+					{ Section: 'Section1', Value: 'Value1', image: 'imageURL1' },
+					{ Section: 'Section2', Value: 'Value2', image: 'imageURL2' },
+				],
+			},
+		]);
+	}, []);
 
 	const showModal = () => {
 		setVisible(true);
@@ -89,6 +115,7 @@ function App() {
 			console.error(error);
 		}
 	};
+
 	const ResultsDisplay = ({ results }) => {
 		if (!Array.isArray(results)) {
 			return null;
@@ -98,6 +125,8 @@ function App() {
 			<div>
 				{results.map((result, index) => {
 					const key = Object.keys(result)[0];
+					const items = result[key];
+
 					return (
 						<Card
 							key={index}
@@ -105,9 +134,22 @@ function App() {
 							style={{ marginBottom: '20px', textAlign: 'left' }}
 						>
 							<List
-								dataSource={result[key]}
+								dataSource={items}
 								renderItem={(item, itemIndex) => (
-									<List.Item key={itemIndex}>{item}</List.Item>
+									<List.Item key={itemIndex}>
+										<Row gutter={16} style={{ width: '100%' }}>
+											<Col span={8}>{item.Section}</Col>
+											<Col span={8}>{item.Value}</Col>
+											<Col span={8}>
+												z
+												<img
+													src={item.image}
+													alt={item.Section}
+													style={{ maxWidth: '100%' }}
+												/>
+											</Col>
+										</Row>
+									</List.Item>
 								)}
 							/>
 						</Card>
