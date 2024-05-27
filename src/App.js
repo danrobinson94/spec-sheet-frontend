@@ -93,6 +93,7 @@ function App() {
 		if (!Array.isArray(results)) {
 			return null;
 		}
+		console.log('results', results);
 
 		return (
 			<div>
