@@ -101,6 +101,12 @@ function App() {
 				{results.map((result, index) => {
 					const searchTerm = Object.keys(result)[0]; // Extract the search term
 					const items = result[searchTerm]; // Extract the list of header-value pairs
+					if (!Array.isArray(items)) {
+						console.error(
+							`Expected array but got ${typeof items} for search term ${searchTerm}`,
+						);
+						return null;
+					}
 
 					return (
 						<Card
