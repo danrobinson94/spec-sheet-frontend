@@ -107,6 +107,7 @@ function App() {
 						);
 						return null;
 					}
+					console.log('ITEMS', items);
 
 					return (
 						<Card
