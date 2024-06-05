@@ -123,10 +123,10 @@ function App() {
 										<List.Item.Meta
 											title={
 												<span style={{ fontWeight: 'bold' }}>
-													{item.header}
+													{item.term_header}
 												</span>
 											}
-											description={item.value}
+											description={item.term_value}
 										/>
 									</List.Item>
 								)}
