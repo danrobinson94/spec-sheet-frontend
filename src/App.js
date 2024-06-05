@@ -93,22 +93,35 @@ function App() {
 		if (!Array.isArray(results)) {
 			return null;
 		}
+
 		console.log('results', results);
 
 		return (
 			<div>
 				{results.map((result, index) => {
-					const key = Object.keys(result)[0];
+					const searchTerm = Object.keys(result)[0]; // Extract the search term
+					const items = result[searchTerm]; // Extract the list of header-value pairs
+
 					return (
 						<Card
 							key={index}
-							title={`Search Term: ${key}`}
+							title={`Search Term: ${searchTerm}`}
 							style={{ marginBottom: '20px', textAlign: 'left' }}
 						>
 							<List
-								dataSource={result[key]}
-								renderItem={(item, itemIndex) => (
-									<List.Item key={itemIndex}>{item}</List.Item>
+								itemLayout='horizontal'
+								dataSource={items} // Use the extracted list
+								renderItem={(item) => (
+									<List.Item>
+										<List.Item.Meta
+											title={
+												<span style={{ fontWeight: 'bold' }}>
+													{item.header}
+												</span>
+											}
+											description={item.value}
+										/>
+									</List.Item>
 								)}
 							/>
 						</Card>
@@ -117,7 +130,6 @@ function App() {
 			</div>
 		);
 	};
-
 	return (
 		<Layout className='layout'>
 			<Header style={{ background: '#fff', textAlign: 'center', padding: 0 }}>
