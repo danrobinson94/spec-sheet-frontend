@@ -83,7 +83,9 @@ function App() {
 				},
 			);
 			message.success('File uploaded successfully');
-			setResults(response.data.result);
+			const resultData = JSON.parse(response.data.result);
+			console.log('RESULT DATA', resultData);
+			setResults(resultData);
 		} catch (error) {
 			message.error('File upload failed');
 			console.error(error);
