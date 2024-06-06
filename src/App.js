@@ -82,6 +82,7 @@ function App() {
 					},
 				},
 			);
+			console.log('RESULT DATA STRING', response.data.result);
 			message.success('File uploaded successfully');
 			const resultData = JSON.parse(response.data.result);
 			console.log('RESULT DATA', resultData);
