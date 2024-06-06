@@ -57,9 +57,7 @@ function App() {
 				message.error(`${info.file.name} file upload failed.`);
 			}
 		},
-		onDrop(e) {
-			console.log('Dropped files', e.dataTransfer.files);
-		},
+		onDrop(e) {},
 	};
 
 	const handleUpload = async () => {
@@ -82,10 +80,8 @@ function App() {
 					},
 				},
 			);
-			console.log('RESULT DATA STRING', response.data.result);
 			message.success('File uploaded successfully');
 			const resultData = JSON.parse(response.data.result);
-			console.log('RESULT DATA', resultData);
 			setResults(resultData);
 		} catch (error) {
 			message.error('File upload failed');
@@ -96,8 +92,6 @@ function App() {
 		if (!Array.isArray(results)) {
 			return null;
 		}
-
-		console.log('results', results);
 
 		return (
 			<div>
@@ -110,7 +104,6 @@ function App() {
 						);
 						return null;
 					}
-					console.log('ITEMS', items);
 
 					return (
 						<Card
