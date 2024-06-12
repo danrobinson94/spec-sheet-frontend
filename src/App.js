@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, message, Layout, Modal, Input, Card, List } from 'antd';
+import { Upload, message, Layout, Modal, Input, Card, List, Button } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import './App.css';
@@ -9,16 +9,29 @@ const { Dragger } = Upload;
 
 function App() {
 	const [file, setFile] = useState(null);
-	const [searchTerms, setSearchTerms] = useState([]);
 	const [visible, setVisible] = useState(false);
-	const [inputValue, setInputValue] = useState('');
+	const [inputTitle, setInputTitle] = useState('');
+	const [keywordInputs, setKeywordInputs] = useState('');
+	const [searchTerms, setSearchTerms] = useState([]);
+	const [subSearchTermInputs, setSubSearchTermInputs] = useState([]);
+	const [subKeywordInputs, setSubKeywordInputs] = useState([]);
 	const [results, setResults] = useState([]);
+	const [collapsed, setCollapsed] = useState({});
+
+    const toggleCollapse = (index) => {
+        setCollapsed((prevState) => ({
+            ...prevState,
+            [index]: !prevState[index],
+        }));
+    };
 
 	const showModal = () => {
 		setVisible(true);
 	};
 
 	const handleOk = () => {
+		const searchTermsJSON = searchTerms.map(({ title, keywords, subSearchTerms }) => ({ title, keywords, subSearchTerms }));
+    	console.log(searchTermsJSON);
 		setVisible(false);
 	};
 
@@ -26,20 +39,91 @@ function App() {
 		setVisible(false);
 	};
 
-	const handleInput = (e) => {
-		setInputValue(e.target.value);
+	const handleTitleChange = (e) => {
+		setInputTitle(e.target.value);
+	};
+	
+	const handleKeywordChange = (index, value) => {
+		const newKeywordInputs = [...keywordInputs];
+		newKeywordInputs[index] = value;
+		setKeywordInputs(newKeywordInputs);
+	};
+
+	const handleSubSearchTermChange = (index, value) => {
+		const newSubSearchTermInputs = [...subSearchTermInputs];
+		newSubSearchTermInputs[index] = value;
+		setSubSearchTermInputs(newSubSearchTermInputs);
+	};
+
+	const handleSubKeywordChange = (termIndex, subIndex, value) => {
+		const newSubKeywordInputs = [...subKeywordInputs];
+		if (!newSubKeywordInputs[termIndex]) {
+		  newSubKeywordInputs[termIndex] = [];
+		}
+		newSubKeywordInputs[termIndex][subIndex] = value;
+		setSubKeywordInputs(newSubKeywordInputs);
 	};
 
 	const handleAddTerm = () => {
-		// Split inputValue string into separate terms based on comma delimiter
-		const newTerms = inputValue.split(',').map((term) => term.trim());
+		setSearchTerms([...searchTerms, { title: inputTitle, keywords: [], subSearchTerms: [] }]);
+		setKeywordInputs([...keywordInputs, '']);
+		setSubSearchTermInputs([...subSearchTermInputs, '']);
+		setSubKeywordInputs([...subKeywordInputs, []]);
+		setInputTitle('');	
+		// setSearchTerms([...searchTerms, { title: inputTitle, keywords: [] }]);
+		// setInputTitle('');
+		// setKeywordInputs('');
+	};
 
-		// Filter out any empty terms
-		const validNewTerms = newTerms.filter((term) => term !== '');
+	const handleAddKeyword = (index) => {
+		setSearchTerms((prevSearchTerms) => {
+			const updatedTerms = [...prevSearchTerms];
+			updatedTerms[index].keywords.push(keywordInputs[index]);
+			return updatedTerms;
+		});
+		const newKeywordInputs = [...keywordInputs];
+		newKeywordInputs[index] = '';
+		setKeywordInputs(newKeywordInputs);
+	};
 
-		// Add the new terms to the searchTerms array
-		setSearchTerms([...searchTerms, ...validNewTerms]);
-		setInputValue('');
+	const handleAddSubSearchTerm = (index) => {
+		setSearchTerms((prevSearchTerms) => {
+		  const updatedTerms = [...prevSearchTerms];
+		  updatedTerms[index].subSearchTerms.push({ title: subSearchTermInputs[index], keywords: [] });
+		  return updatedTerms;
+		});
+		const newSubSearchTermInputs = [...subSearchTermInputs];
+		newSubSearchTermInputs[index] = '';
+		setSubSearchTermInputs(newSubSearchTermInputs);
+		const newSubKeywordInputs = [...subKeywordInputs];
+		newSubKeywordInputs[index] = [...(newSubKeywordInputs[index] || []), ''];
+		setSubKeywordInputs(newSubKeywordInputs);
+	};
+
+	const handleAddSubKeyword = (termIndex, subIndex) => {
+		setSearchTerms((prevSearchTerms) => {
+		  const updatedTerms = [...prevSearchTerms];
+		  updatedTerms[termIndex].subSearchTerms[subIndex].keywords.push(subKeywordInputs[termIndex][subIndex]);
+		  return updatedTerms;
+		});
+		const newSubKeywordInputs = [...subKeywordInputs];
+		newSubKeywordInputs[termIndex][subIndex] = '';
+		setSubKeywordInputs(newSubKeywordInputs);
+	};
+
+	const handleRemoveTerm = (index) => {
+		const updatedTerms = [...searchTerms];
+		updatedTerms.splice(index, 1);
+		setSearchTerms(updatedTerms);
+		const newKeywordInputs = [...keywordInputs];
+		newKeywordInputs.splice(index, 1);
+		setKeywordInputs(newKeywordInputs);
+		const newSubSearchTermInputs = [...subSearchTermInputs];
+		newSubSearchTermInputs.splice(index, 1);
+		setSubSearchTermInputs(newSubSearchTermInputs);
+		const newSubKeywordInputs = [...subKeywordInputs];
+		newSubKeywordInputs.splice(index, 1);
+		setSubKeywordInputs(newSubKeywordInputs);
 	};
 
 	const props = {
@@ -68,7 +152,7 @@ function App() {
 
 		const formData = new FormData();
 		formData.append('pdf_file', file); // Ensure the key matches the FastAPI endpoint parameter
-		formData.append('search_terms', searchTerms);
+		formData.append('search_terms', JSON.stringify(searchTerms));
 
 		try {
 			const response = await axios.post(
@@ -83,6 +167,7 @@ function App() {
 			message.success('File uploaded successfully');
 			const resultData = JSON.parse(response.data.result);
 			setResults(resultData);
+			console.log(results);
 		} catch (error) {
 			message.error('File upload failed');
 			console.error(error);
@@ -96,37 +181,59 @@ function App() {
 		return (
 			<div>
 				{results.map((result, index) => {
-					const searchTerm = Object.keys(result)[0]; // Extract the search term
-					const items = result[searchTerm]; // Extract the list of header-value pairs
-					if (!Array.isArray(items)) {
+					const searchTerm = result[0]["title"]; // Extract the search term
+					const items = result; // Extract the list of header-value pairs
+					if (!Array.isArray(result)) {
 						console.error(
 							`Expected array but got ${typeof items} for search term ${searchTerm}`,
 						);
 						return null;
 					}
+					const sortedItems = items.slice().sort((a, b) => {
+						if (a.title < b.title) return -1;
+						if (a.title > b.title) return 1;
+						return 0;
+					});
 
 					return (
 						<Card
 							key={index}
-							title={`Search Term: ${searchTerm}`}
+							title={
+								<div>
+									<span>{searchTerm.toUpperCase()}</span>
+									<Button
+										type="link"
+										onClick={() => toggleCollapse(index)}
+										style={{ float: 'right' }}
+									>
+										{collapsed[index] ? 'Expand' : 'Collapse'}
+									</Button>
+								</div>
+							}
 							style={{ marginBottom: '20px', textAlign: 'left' }}
 						>
-							<List
-								itemLayout='horizontal'
-								dataSource={items} // Use the extracted list
-								renderItem={(item) => (
-									<List.Item>
-										<List.Item.Meta
-											title={
-												<span style={{ fontWeight: 'bold' }}>
-													{item.term_header}
-												</span>
-											}
-											description={item.term_value}
-										/>
-									</List.Item>
-								)}
-							/>
+							{!collapsed[index] && (
+								<List
+									itemLayout='horizontal'
+									dataSource={sortedItems} // Use the extracted list
+									renderItem={(item) => (
+										<List.Item>
+											<List.Item.Meta
+												title={
+													<div style={{ whiteSpace: 'pre-wrap' }}>
+														<span>{item["title"]}</span>
+														<br />
+														<span>{item["reference"]}</span>
+													</div>
+												}
+												description={
+													<span dangerouslySetInnerHTML={{ __html: item["value"].replace(new RegExp(item["title"], 'gi'), `<span style="background-color: yellow;">$&</span>`) }} />
+												}
+											/>
+										</List.Item>
+									)}
+								/>
+							)}
 						</Card>
 					);
 				})}
@@ -157,19 +264,57 @@ function App() {
 				</button>
 				<Modal
 					title='Update Search Terms'
-					onOk={handleOk}
 					open={visible}
+					onOk={handleOk}
 					onCancel={handleCancel}
-				>
+					>
 					<Input
-						placeholder='Enter search term'
-						value={inputValue}
-						onChange={handleInput}
+						placeholder='Enter title'
+						value={inputTitle}
+						onChange={handleTitleChange}
 					/>
-					<button onClick={handleAddTerm}>Add</button>
+					<Button onClick={handleAddTerm}>Add Term</Button>
 					<ul>
 						{searchTerms.map((term, index) => (
-							<li key={index}>{term}</li>
+						<li key={index}>
+							<strong>Title:</strong> {term.title}
+							<Input
+							placeholder='Enter keyword'
+							value={keywordInputs[index]}
+							onChange={(e) => handleKeywordChange(index, e.target.value)}
+							/>
+							<Button onClick={() => handleAddKeyword(index)}>Add Keyword</Button>
+							<ul>
+							{term.keywords.map((keyword, keywordIndex) => (
+								<li key={keywordIndex}>{keyword}</li>
+							))}
+							</ul>
+							<Input
+							placeholder='Enter sub search term'
+							value={subSearchTermInputs[index]}
+							onChange={(e) => handleSubSearchTermChange(index, e.target.value)}
+							/>
+							<Button onClick={() => handleAddSubSearchTerm(index)}>Add Sub Search Term</Button>
+							<ul>
+							{term.subSearchTerms.map((subTerm, subIndex) => (
+								<li key={subIndex}>
+								<strong>Sub Title:</strong> {subTerm.title}
+								<Input
+									placeholder='Enter keyword for sub search term'
+									value={subKeywordInputs[index]?.[subIndex] || ''}
+									onChange={(e) => handleSubKeywordChange(index, subIndex, e.target.value)}
+								/>
+								<Button onClick={() => handleAddSubKeyword(index, subIndex)}>Add Keyword</Button>
+								<ul>
+									{subTerm.keywords.map((keyword, keywordIndex) => (
+									<li key={keywordIndex}>{keyword}</li>
+									))}
+								</ul>
+								</li>
+							))}
+							</ul>
+							<Button onClick={() => handleRemoveTerm(index)}>Remove</Button>
+						</li>
 						))}
 					</ul>
 				</Modal>
