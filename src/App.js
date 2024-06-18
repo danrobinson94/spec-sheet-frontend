@@ -33,6 +33,7 @@ function App() {
 	const [subKeywordInputs, setSubKeywordInputs] = useState([]);
 	const [results, setResults] = useState([]);
 	const [collapsed, setCollapsed] = useState({});
+	const [pageNumber, setPageNumber] = useState(1);
 
 	const defaultLayoutPluginInstance = defaultLayoutPlugin();
 	const searchPluginInstance = searchPlugin();
@@ -176,6 +177,29 @@ function App() {
 		onDrop(e) {},
 	};
 
+	const handlePageChange = (e) => {
+		const newPageNumber = parseInt(e.target.value, 10);
+		if (!isNaN(newPageNumber)) {
+			setPageNumber(newPageNumber);
+		}
+	};
+
+	const handleJumpToPage = () => {
+		// Jump to the specified page number
+		const pdfViewerInstance = document.querySelector('.rpv-core__inner-pages');
+		if (pdfViewerInstance) {
+			pdfViewerInstance.scrollTop = (pageNumber - 1) * pdfViewerInstance.clientHeight;
+		}
+	};
+
+	const handleCardClick = (item) => {
+		const newPageNumber = item['page_num'];
+		console.log(item);
+		console.log('penis')
+		setPageNumber(newPageNumber);
+		handleJumpToPage();
+	};
+
 	const handleUpload = async () => {
 		if (!file) {
 			message.error('No file selected for upload.');
@@ -230,27 +254,29 @@ function App() {
 
 					return (
 						<Card
-							key={index}
-							title={
-								<div>
-									<span>{searchTerm.toUpperCase()}</span>
-									<Button
-										type='link'
-										onClick={() => toggleCollapse(index)}
-										style={{ float: 'right' }}
-									>
-										{collapsed[index] ? 'Expand' : 'Collapse'}
-									</Button>
-								</div>
-							}
-							style={{ marginBottom: '20px', textAlign: 'left' }}
-						>
+						key={index}
+						style={{ marginBottom: '20px', textAlign: 'left' }}
+					>
+							<div>
+								<span>{searchTerm.toUpperCase()}</span>
+								<Button
+									type='link'
+									onClick={(e) => {
+										e.stopPropagation(); // Prevents the card's onClick from triggering
+										toggleCollapse(index);
+									}}
+									style={{ float: 'right' }}
+								>
+									{collapsed[index] ? 'Expand' : 'Collapse'}
+								</Button>
+							</div>
 							{!collapsed[index] && (
 								<List
 									itemLayout='horizontal'
 									dataSource={sortedItems} // Use the extracted list
 									renderItem={(item) => (
 										<List.Item>
+											<div onClick={handleCardClick(item)} style={{ cursor: 'pointer' }}>
 											<List.Item.Meta
 												title={
 													<div style={{ whiteSpace: 'pre-wrap' }}>
@@ -264,17 +290,18 @@ function App() {
 														dangerouslySetInnerHTML={{
 															__html: item['value'].replace(
 																new RegExp(item['title'], 'gi'),
-																`<span style="background-color: yellow;">$&</span>`,
+																`<span style="background-color: yellow;">$&</span>`
 															),
 														}}
 													/>
 												}
 											/>
+											</div>
 										</List.Item>
 									)}
 								/>
 							)}
-						</Card>
+					</Card>
 					);
 				})}
 			</div>
@@ -386,23 +413,38 @@ function App() {
 					</ul>
 				</Modal>
 				{fileUrl && (
-					<div>
-						<Worker
-							workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}
-						>
-							<div style={{ height: '750px' }}>
-								<Viewer
-									fileUrl={fileUrl}
-									plugins={[defaultLayoutPluginInstance, searchPluginInstance]}
-								/>
+					<div
+						className={`viewer-results-container ${
+							results.length === 0 ? 'full-width' : ''
+						}`}
+					>
+						{results.length > 0 && (
+							<div className='results-display'>
+								<ResultsDisplay results={results} />
 							</div>
-						</Worker>
+						)}
+						<div className='pdf-viewer'>
+							<Input
+								type='number'
+								value={pageNumber}
+								onChange={handlePageChange}
+								style={{ marginBottom: '10px' }}
+							/>
+							<Button onClick={handleJumpToPage}>Go to Page</Button>
+							<Worker
+								workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}
+							>
+								<div style={{ height: '750px' }}>
+									<Viewer fileUrl={fileUrl} plugins={[defaultLayoutPluginInstance, searchPluginInstance]} />
+								</div>
+							</Worker>
+						</div>
+						
 					</div>
 				)}
 			</Content>
-			<ResultsDisplay results={results} />
 		</Layout>
 	);
-}
+};
 
 export default App;

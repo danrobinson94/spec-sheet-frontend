@@ -36,3 +36,23 @@
     transform: rotate(360deg);
   }
 }
+
+.viewer-results-container {
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	gap: 20px;
+}
+
+.viewer-results-container.full-width {
+	display: block;
+}
+
+.pdf-viewer {
+	flex: 1;
+}
+
+.results-display {
+	flex: 1;
+}
+
