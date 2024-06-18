@@ -284,7 +284,7 @@ function App() {
 	useEffect(() => {
 		if (fileUrl) {
 			const timeoutId = setTimeout(() => {
-				searchPluginInstance.Search({ keyword: 'warranty' });
+				searchPluginInstance.search({ keyword: 'warranty' });
 			}, 1000);
 
 			return () => clearTimeout(timeoutId);
