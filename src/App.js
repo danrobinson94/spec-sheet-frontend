@@ -13,11 +13,13 @@ import { InboxOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { Worker, Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
 import { searchPlugin } from '@react-pdf-viewer/search';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import '@react-pdf-viewer/search/lib/styles/index.css';
 import './App.css';
+import ResultsDisplay from './components/ResultsDisplay'; // Import the new component
 
 const { Header, Content } = Layout;
 const { Dragger } = Upload;
@@ -36,7 +38,9 @@ function App() {
 	const [pageNumber, setPageNumber] = useState(1);
 
 	const defaultLayoutPluginInstance = defaultLayoutPlugin();
+	const pageNavigationPluginInstance = pageNavigationPlugin();
 	const searchPluginInstance = searchPlugin();
+	const { jumpToPage } = pageNavigationPluginInstance;
 	const { Search } = searchPluginInstance;
 
 	const toggleCollapse = (index) => {
@@ -186,16 +190,19 @@ function App() {
 
 	const handleJumpToPage = () => {
 		// Jump to the specified page number
-		const pdfViewerInstance = document.querySelector('.rpv-core__inner-pages');
-		if (pdfViewerInstance) {
-			pdfViewerInstance.scrollTop = (pageNumber - 1) * pdfViewerInstance.clientHeight;
-		}
+		console.log('PAGE NUMBER', pageNumber);
+		jumpToPage(pageNumber);
+		// const pdfViewerInstance = document.querySelector('.rpv-core__inner-pages');
+		// if (pdfViewerInstance) {
+		// 	pdfViewerInstance.scrollTop =
+		// 		(pageNumber - 1) * pdfViewerInstance.clientHeight;
+		// }
 	};
 
 	const handleCardClick = (item) => {
+		console.log('CLICK 2', item);
 		const newPageNumber = item['page_num'];
 		console.log(item);
-		console.log('penis')
 		setPageNumber(newPageNumber);
 		handleJumpToPage();
 	};
@@ -228,84 +235,6 @@ function App() {
 			message.error('File upload failed');
 			console.error(error);
 		}
-	};
-
-	const ResultsDisplay = ({ results }) => {
-		if (!Array.isArray(results)) {
-			return null;
-		}
-
-		return (
-			<div>
-				{results.map((result, index) => {
-					const searchTerm = result[0]['title']; // Extract the search term
-					const items = result; // Extract the list of header-value pairs
-					if (!Array.isArray(result)) {
-						console.error(
-							`Expected array but got ${typeof items} for search term ${searchTerm}`,
-						);
-						return null;
-					}
-					const sortedItems = items.slice().sort((a, b) => {
-						if (a.title < b.title) return -1;
-						if (a.title > b.title) return 1;
-						return 0;
-					});
-
-					return (
-						<Card
-						key={index}
-						style={{ marginBottom: '20px', textAlign: 'left' }}
-					>
-							<div>
-								<span>{searchTerm.toUpperCase()}</span>
-								<Button
-									type='link'
-									onClick={(e) => {
-										e.stopPropagation(); // Prevents the card's onClick from triggering
-										toggleCollapse(index);
-									}}
-									style={{ float: 'right' }}
-								>
-									{collapsed[index] ? 'Expand' : 'Collapse'}
-								</Button>
-							</div>
-							{!collapsed[index] && (
-								<List
-									itemLayout='horizontal'
-									dataSource={sortedItems} // Use the extracted list
-									renderItem={(item) => (
-										<List.Item>
-											<div onClick={handleCardClick(item)} style={{ cursor: 'pointer' }}>
-											<List.Item.Meta
-												title={
-													<div style={{ whiteSpace: 'pre-wrap' }}>
-														<span>{item['title']}</span>
-														<br />
-														<span>{item['reference']}</span>
-													</div>
-												}
-												description={
-													<span
-														dangerouslySetInnerHTML={{
-															__html: item['value'].replace(
-																new RegExp(item['title'], 'gi'),
-																`<span style="background-color: yellow;">$&</span>`
-															),
-														}}
-													/>
-												}
-											/>
-											</div>
-										</List.Item>
-									)}
-								/>
-							)}
-					</Card>
-					);
-				})}
-			</div>
-		);
 	};
 
 	useEffect(() => {
@@ -420,31 +349,35 @@ function App() {
 					>
 						{results.length > 0 && (
 							<div className='results-display'>
-								<ResultsDisplay results={results} />
+								<ResultsDisplay
+									results={results}
+									collapsed={collapsed}
+									toggleCollapse={toggleCollapse}
+									handleCardClick={handleCardClick}
+								/>
 							</div>
 						)}
 						<div className='pdf-viewer'>
-							<Input
-								type='number'
-								value={pageNumber}
-								onChange={handlePageChange}
-								style={{ marginBottom: '10px' }}
-							/>
-							<Button onClick={handleJumpToPage}>Go to Page</Button>
 							<Worker
 								workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}
 							>
 								<div style={{ height: '750px' }}>
-									<Viewer fileUrl={fileUrl} plugins={[defaultLayoutPluginInstance, searchPluginInstance]} />
+									<Viewer
+										fileUrl={fileUrl}
+										plugins={[
+											defaultLayoutPluginInstance,
+											searchPluginInstance,
+											pageNavigationPluginInstance,
+										]}
+									/>
 								</div>
 							</Worker>
 						</div>
-						
 					</div>
 				)}
 			</Content>
 		</Layout>
 	);
-};
+}
 
 export default App;
