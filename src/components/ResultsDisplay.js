@@ -12,7 +12,7 @@ const ResultsDisplay = ({
 	}
 
 	return (
-		<div>
+		<div style={{ height: '95vh', overflowY: 'auto' }}>
 			{results.map((result, index) => {
 				const searchTerm = result[0]['title']; // Extract the search term
 				const items = result; // Extract the list of header-value pairs
