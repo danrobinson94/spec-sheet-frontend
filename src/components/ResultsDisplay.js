@@ -29,7 +29,10 @@ const ResultsDisplay = ({
 				});
 
 				return (
-					<Card key={index} style={{ marginBottom: '20px', textAlign: 'left' }}>
+					<Card
+						key={index}
+						style={{ marginBottom: '20px', textAlign: 'left', width: '100%' }}
+					>
 						<div>
 							<span>{searchTerm.toUpperCase()}</span>
 							<Button
@@ -50,12 +53,14 @@ const ResultsDisplay = ({
 								renderItem={(item) => (
 									<List.Item
 										onClick={() => handleCardClick(item)}
-										style={{ cursor: 'pointer' }}
+										style={{ cursor: 'pointer', width: '100%' }}
 									>
-										<div>
+										<div style={{ width: '100%' }}>
 											<List.Item.Meta
 												title={
-													<div style={{ whiteSpace: 'pre-wrap' }}>
+													<div
+														style={{ whiteSpace: 'pre-wrap', width: '100%' }}
+													>
 														<span>{item['title']}</span>
 														<br />
 														<span>{item['reference']}</span>
@@ -63,6 +68,7 @@ const ResultsDisplay = ({
 												}
 												description={
 													<span
+														style={{ width: '100%', display: 'block' }}
 														dangerouslySetInnerHTML={{
 															__html: item['value'].replace(
 																new RegExp(item['title'], 'gi'),

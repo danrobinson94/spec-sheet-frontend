@@ -14,6 +14,11 @@ import axios from 'axios';
 import { Worker, Viewer, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
+import {
+	highlightPlugin,
+	Trigger,
+	HighlightArea,
+} from '@react-pdf-viewer/highlight';
 import { searchPlugin } from '@react-pdf-viewer/search';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
@@ -36,6 +41,8 @@ function App() {
 	const [results, setResults] = useState([]);
 	const [collapsed, setCollapsed] = useState({});
 	const [pageNumber, setPageNumber] = useState(1);
+	const [highlightedText, setHighlightedText] = useState('');
+	const [searchTitle, setSearchTitle] = useState('');
 
 	const defaultLayoutPluginInstance = defaultLayoutPlugin();
 	const pageNavigationPluginInstance = pageNavigationPlugin();
@@ -189,14 +196,7 @@ function App() {
 	};
 
 	const handleJumpToPage = () => {
-		// Jump to the specified page number
-		console.log('PAGE NUMBER', pageNumber);
 		jumpToPage(pageNumber);
-		// const pdfViewerInstance = document.querySelector('.rpv-core__inner-pages');
-		// if (pdfViewerInstance) {
-		// 	pdfViewerInstance.scrollTop =
-		// 		(pageNumber - 1) * pdfViewerInstance.clientHeight;
-		// }
 	};
 
 	const handleCardClick = (item) => {
@@ -204,6 +204,8 @@ function App() {
 		const newPageNumber = item['page_num'];
 		console.log(item);
 		setPageNumber(newPageNumber);
+		setHighlightedText(item['value']);
+		setSearchTitle(item['title']);
 		handleJumpToPage();
 	};
 
@@ -236,16 +238,7 @@ function App() {
 			console.error(error);
 		}
 	};
-
-	useEffect(() => {
-		if (fileUrl) {
-			const timeoutId = setTimeout(() => {
-				searchPluginInstance.Search({ keyword: 'warranty' });
-			}, 1000);
-
-			return () => clearTimeout(timeoutId);
-		}
-	}, [fileUrl]);
+	console.log('RESULT', results);
 
 	return (
 		<Layout className='layout'>
@@ -341,6 +334,7 @@ function App() {
 						))}
 					</ul>
 				</Modal>
+				<div style={{ height: '30px' }} />
 				{fileUrl && (
 					<div
 						className={`viewer-results-container ${
